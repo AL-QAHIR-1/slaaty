@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>صلاتي</title>
+    <link rel="icon" href="تنزيل.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #692d01;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      min-height: 100vh;
+    }
+
+    .card {
+    background-color: #995922;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 0 20px 1px #000000eb;
+    text-align: center;
+    }
+
+    .logo {
+      font-size: 32px;
+      color: #00c853; /* أخضر */
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* مسافة بين الصورة والكلمة */
+      justify-content: space-between;
+
+}
+
+.logo-img {
+    width: 62px;
+    height: 54px;
+    object-fit: contain;
+}
+    .time-now {
+      font-size: 24px;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .date {
+      font-size: 16px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .prayer-times {
+      background-color: #4c2c03;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .prayer-times div {
+      font-size: 18px;
+      color: white;
+      margin: 5px 0;
+    }
+
+    .next-prayer {
+      font-size: 20px;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .countdown {
+      font-size: 24px;
+      color: #00e676;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .progress-container {
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 10px;
+    }
+
+    .progress-bar {
+      background-color: #00e676;
+      height: 100%;
+      width: 0%;
+      transition: width 1s linear;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 20px;
+      }
+
+      .logo {
+        font-size: 26px;
+      }
+
+      .time-now {
+        font-size: 20px;
+      }
+
+      .countdown {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+      <div class="logo">
+    <div >صلاتي</div>
+    <img src="تنزيل.png" alt="Logo" class="logo-img" />
+  </div>
+    <div class="time-now" id="timeNow">الساعة الآن</div>
+    <div class="date" id="dateNow">التاريخ</div>
+
+    <div class="prayer-times" id="prayerTimes">
+      <div>الفجر: 04:10 ص</div>
+      <div>الظهر: 12:00 م</div>
+      <div>العصر: 03:20 م</div>
+      <div>المغرب: 06:45 م</div>
+      <div>العشاء: 08:15 م</div>
+    </div>
+
+    <div class="next-prayer" id="nextPrayer">الصلاة القادمة: العصر</div>
+    <div class="countdown" id="countdown">00:00:00</div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+
+  <script>
+    const prayers = [
+      { name: "الفجر", time: "04:10 AM" },
+      { name: "الظهر", time: "12:00 PM" },
+      { name: "العصر", time: "03:20 PM" },
+      { name: "المغرب", time: "06:45 PM" },
+      { name: "العشاء", time: "08:15 PM" }
+    ];
+
+    function formatTime(date) {
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'م' : 'ص';
+      hours = hours % 12 || 12;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    }
+
+    function update() {
+      const now = new Date();
+      document.getElementById("timeNow").textContent = `الساعة الآن: ${formatTime(now)}`;
+      document.getElementById("dateNow").textContent = `التاريخ: ${now.toLocaleDateString('ar-EG')} - هجري: 1446/11/22`;
+
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      let nextPrayer = prayers[0];
+      let nextPrayerTime = 0;
+
+      for (let i = 0; i < prayers.length; i++) {
+        let [h, m] = prayers[i].time.split(" ")[0].split(":").map(Number);
+        const meridiem = prayers[i].time.split(" ")[1];
+        if (meridiem === "PM" && h !== 12) h += 12;
+        if (meridiem === "AM" && h === 12) h = 0;
+
+        const total = h * 60 + m;
+        if (total > nowMinutes) {
+          nextPrayer = prayers[i];
+          nextPrayerTime = total;
+          break;
+        }
+      }
+
+      let nextPrayerMinutes = nextPrayerTime;
+      let diffInSeconds = ((nextPrayerMinutes - nowMinutes) * 60) - now.getSeconds();
+      if (diffInSeconds < 0) diffInSeconds += 24 * 60 * 60;
+
+      const hours = Math.floor(diffInSeconds / 3600);
+      const minutes = Math.floor((diffInSeconds % 3600) / 60);
+      const seconds = diffInSeconds % 60;
+
+      document.getElementById("nextPrayer").textContent = `الصلاة القادمة: ${nextPrayer.name}`;
+      document.getElementById("countdown").textContent =
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      const totalBetween = nextPrayerMinutes - nowMinutes;
+      const passed = totalBetween - diffInSeconds / 60;
+      const percentage = Math.min(100, (passed / totalBetween) * 100);
+      document.getElementById("progressBar").style.width = `${percentage}%`;
+    }
+
+    setInterval(update, 1000);
+    update();
+  </script>
+  <script>
+function sendLocationToServer(lat, lon) {
+  fetch('http://localhost:3000/location', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ latitude: lat, longitude: lon, timestamp: new Date().toISOString() })
+  })
+  .then(res => res.text())
+  .then(data => console.log('Server response:', data))
+  .catch(err => console.error('Error sending location:', err));
+}
+
+function requestLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        sendLocationToServer(lat, lon);
+      },
+      error => {
+        console.log('User denied location or error:', error);
+      }
+    );
+  } else {
+    console.log('Geolocation not supported by this browser.');
+  }
+}
+
+requestLocation();
+</script>
+
+</body>
+</html>
